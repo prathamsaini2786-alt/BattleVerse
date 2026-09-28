@@ -4,6 +4,7 @@ export type Character = {
   universe: string;
   power: number;
   accent: string;
+  description: string;
 };
 
 export const characters: Character[] = [
@@ -13,6 +14,7 @@ export const characters: Character[] = [
     universe: "Dragon Ball",
     power: 98,
     accent: "from-orange-500/40 to-red-600/10",
+    description: "A Saiyan warrior who constantly pushes beyond his limits.",
   },
   {
     id: "gojo",
@@ -20,6 +22,7 @@ export const characters: Character[] = [
     universe: "Jujutsu Kaisen",
     power: 96,
     accent: "from-blue-500/40 to-purple-600/10",
+    description: "The strongest modern sorcerer with limitless potential.",
   },
   {
     id: "luffy",
@@ -27,6 +30,7 @@ export const characters: Character[] = [
     universe: "One Piece",
     power: 94,
     accent: "from-red-500/40 to-orange-500/10",
+    description: "A pirate captain chasing the ultimate freedom.",
   },
   {
     id: "naruto",
@@ -34,6 +38,7 @@ export const characters: Character[] = [
     universe: "Naruto",
     power: 93,
     accent: "from-orange-500/40 to-yellow-500/10",
+    description: "A shinobi who turned his struggles into extraordinary power.",
   },
   {
     id: "batman",
@@ -41,6 +46,7 @@ export const characters: Character[] = [
     universe: "DC",
     power: 87,
     accent: "from-zinc-400/30 to-purple-900/10",
+    description: "A tactical master who relies on preparation and technology.",
   },
   {
     id: "spiderman",
@@ -48,5 +54,6 @@ export const characters: Character[] = [
     universe: "Marvel",
     power: 89,
     accent: "from-red-600/40 to-blue-600/10",
+    description: "A super-powered hero with agility, reflexes and spider-sense.",
   },
 ];

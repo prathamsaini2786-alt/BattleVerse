@@ -17,9 +17,9 @@ export default function CharacterShowcase() {
             </p>
 
             <h2 className="mt-4 max-w-4xl text-5xl font-black uppercase leading-[0.9] tracking-[-0.04em] md:text-8xl">
-              Meet the
+              Choose
               <span className="block text-zinc-500">
-                Fighters
+                Your Legends
               </span>
             </h2>
           </div>
@@ -31,7 +31,7 @@ export default function CharacterShowcase() {
         </div>
 
         {/* Character grid */}
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {characters.map((character) => (
             <CharacterCard
               key={character.id}
