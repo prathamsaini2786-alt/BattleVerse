@@ -5,6 +5,7 @@ export type Character = {
   power: number;
   accent: string;
   description: string;
+  image: string;
 };
 
 export const characters: Character[] = [
@@ -15,6 +16,7 @@ export const characters: Character[] = [
     power: 98,
     accent: "from-orange-500/40 to-red-600/10",
     description: "A Saiyan warrior who constantly pushes beyond his limits.",
+    image: "",
   },
   {
     id: "gojo",
@@ -23,6 +25,7 @@ export const characters: Character[] = [
     power: 96,
     accent: "from-blue-500/40 to-purple-600/10",
     description: "The strongest modern sorcerer with limitless potential.",
+    image: "",
   },
   {
     id: "luffy",
@@ -31,6 +34,7 @@ export const characters: Character[] = [
     power: 94,
     accent: "from-red-500/40 to-orange-500/10",
     description: "A pirate captain chasing the ultimate freedom.",
+    image: "",
   },
   {
     id: "naruto",
@@ -39,6 +43,7 @@ export const characters: Character[] = [
     power: 93,
     accent: "from-orange-500/40 to-yellow-500/10",
     description: "A shinobi who turned his struggles into extraordinary power.",
+    image: "",
   },
   {
     id: "batman",
@@ -47,6 +52,7 @@ export const characters: Character[] = [
     power: 87,
     accent: "from-zinc-400/30 to-purple-900/10",
     description: "A tactical master who relies on preparation and technology.",
+    image: "",
   },
   {
     id: "spiderman",
@@ -55,5 +61,6 @@ export const characters: Character[] = [
     power: 89,
     accent: "from-red-600/40 to-blue-600/10",
     description: "A super-powered hero with agility, reflexes and spider-sense.",
+    image: "",
   },
 ];
