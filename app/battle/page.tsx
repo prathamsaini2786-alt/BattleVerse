@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { characters } from "@/data/characters";
-
-export default function BattlePage() {
+function BattleContent() {
   const searchParams = useSearchParams();
 
   const fighter1Id = searchParams.get("fighter1") || "gojo";
@@ -316,5 +315,20 @@ export default function BattlePage() {
 
       </div>
     </main>
+  );
+}
+export default function BattlePage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-black text-white">
+          <p className="text-xs uppercase tracking-[0.3em] text-zinc-500">
+            Loading Battle...
+          </p>
+        </main>
+      }
+    >
+      <BattleContent />
+    </Suspense>
   );
 }
