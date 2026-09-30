@@ -13,7 +13,7 @@ export type BattleEvent = {
   message: string;
 };
 
-export type BattleRoyaleResult = {
+export type BattleResult = {
   winner: BattleFighter;
   fighters: BattleFighter[];
   events: BattleEvent[];
@@ -23,8 +23,7 @@ export type BattleRoyaleResult = {
 function calculateDamage(attacker: BattleFighter) {
   const baseDamage = attacker.power * 0.08;
 
-  const variation =
-    Math.random() * 12 - 6;
+  const variation = Math.random() * 12 - 6;
 
   return Math.max(
     4,
@@ -32,42 +31,44 @@ function calculateDamage(attacker: BattleFighter) {
   );
 }
 
-export function simulateBattleRoyale(
-  characters: Character[]
-): BattleRoyaleResult {
-  const fighters: BattleFighter[] = characters.map(
-    (character) => ({
-      ...character,
-      health: 100,
-      alive: true,
-    })
-  );
+export function simulateBattle(
+  characterOne: Character,
+  characterTwo: Character
+): BattleResult {
+  const fighterOne: BattleFighter = {
+    ...characterOne,
+    health: 100,
+    alive: true,
+  };
+
+  const fighterTwo: BattleFighter = {
+    ...characterTwo,
+    health: 100,
+    alive: true,
+  };
+
+  const fighters = [fighterOne, fighterTwo];
 
   const events: BattleEvent[] = [];
 
   let round = 0;
 
   while (
-    fighters.filter((fighter) => fighter.alive).length > 1 &&
+    fighterOne.alive &&
+    fighterTwo.alive &&
     round < 100
   ) {
     round++;
 
-    const alive = fighters.filter(
-      (fighter) => fighter.alive
-    );
-
     const attacker =
-      alive[Math.floor(Math.random() * alive.length)];
-
-    const possibleTargets = alive.filter(
-      (fighter) => fighter.id !== attacker.id
-    );
+      Math.random() < 0.5
+        ? fighterOne
+        : fighterTwo;
 
     const defender =
-      possibleTargets[
-        Math.floor(Math.random() * possibleTargets.length)
-      ];
+      attacker.id === fighterOne.id
+        ? fighterTwo
+        : fighterOne;
 
     const damage = calculateDamage(attacker);
 
@@ -92,9 +93,9 @@ export function simulateBattleRoyale(
     });
   }
 
-  const winner =
-    fighters.find((fighter) => fighter.alive) ??
-    fighters[0];
+  const winner = fighterOne.alive
+    ? fighterOne
+    : fighterTwo;
 
   return {
     winner,
