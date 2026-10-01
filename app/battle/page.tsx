@@ -1,40 +1,83 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
+import {
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+
 import { useSearchParams } from "next/navigation";
+
 import { characters } from "@/data/characters";
-import { simulateBattle } from "@/lib/battleEngine";
+import {
+  simulateBattle,
+  type BattleEvent,
+} from "@/lib/battleEngine";
 
 function BattleContent() {
   const searchParams = useSearchParams();
 
-  const fighter1Id = searchParams.get("fighter1") || "gojo";
-  const fighter2Id = searchParams.get("fighter2") || "luffy";
+  const fighter1Id =
+    searchParams.get("fighter1") || "gojo";
+
+  const fighter2Id =
+    searchParams.get("fighter2") || "luffy";
 
   const fighter1 =
-    characters.find((character) => character.id === fighter1Id) ||
-    characters[0];
+    characters.find(
+      (character) => character.id === fighter1Id
+    ) || characters[0];
 
   const fighter2 =
-    characters.find((character) => character.id === fighter2Id) ||
-    characters[1];
+    characters.find(
+      (character) => character.id === fighter2Id
+    ) || characters[1];
 
   const [health1, setHealth1] = useState(100);
   const [health2, setHealth2] = useState(100);
-  const [round, setRound] = useState(0);
-  const [battleLog, setBattleLog] = useState<string[]>([]);
-  const [winner, setWinner] = useState<string | null>(null);
-  const [battleStarted, setBattleStarted] = useState(false);
-  const [isRunning, setIsRunning] = useState(false);
-  const [currentEvent, setCurrentEvent] = useState<string | null>(null);
-  const [damagePopup1, setDamagePopup1] = useState<number | null>(null);
-  const [damagePopup2, setDamagePopup2] = useState<number | null>(null);
-  const [flash1, setFlash1] = useState(false);
-  const [flash2, setFlash2] = useState(false);
-  const [isSkipped, setIsSkipped] = useState(false);
-  const battleResultRef = useRef<ReturnType<typeof simulateBattle> | null>(null);
 
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [round, setRound] = useState(0);
+
+  const [battleLog, setBattleLog] =
+    useState<string[]>([]);
+
+  const [winner, setWinner] =
+    useState<string | null>(null);
+
+  const [battleStarted, setBattleStarted] =
+    useState(false);
+
+  const [isRunning, setIsRunning] =
+    useState(false);
+
+  const [currentEvent, setCurrentEvent] =
+    useState<string | null>(null);
+
+  const [eventType, setEventType] =
+    useState<BattleEvent["type"] | null>(null);
+
+  const [damagePopup1, setDamagePopup1] =
+    useState<number | null>(null);
+
+  const [damagePopup2, setDamagePopup2] =
+    useState<number | null>(null);
+
+  const [flash1, setFlash1] =
+    useState(false);
+
+  const [flash2, setFlash2] =
+    useState(false);
+
+  const timerRef =
+    useRef<ReturnType<typeof setInterval> | null>(
+      null
+    );
+
+  const battleResultRef =
+    useRef<ReturnType<typeof simulateBattle> | null>(
+      null
+    );
 
   useEffect(() => {
     return () => {
@@ -51,90 +94,76 @@ function BattleContent() {
     setBattleLog([]);
     setWinner(null);
     setCurrentEvent(null);
+    setEventType(null);
     setDamagePopup1(null);
     setDamagePopup2(null);
     setFlash1(false);
     setFlash2(false);
-    setIsSkipped(false);
   };
-
-  const skipBattle = () => {
-  const result = battleResultRef.current;
-
-  if (!result) return;
-
-  if (timerRef.current) {
-    clearInterval(timerRef.current);
-    timerRef.current = null;
-  }
-
-  setHealth1(
-    result.fighters.find(
-      (fighter) => fighter.id === fighter1.id
-    )?.health ?? 0
-  );
-
-  setHealth2(
-    result.fighters.find(
-      (fighter) => fighter.id === fighter2.id
-    )?.health ?? 0
-  );
-
-  setRound(result.rounds);
-
-  setBattleLog(
-    result.events.map((event) => event.message)
-  );
-
-  setWinner(result.winner.name);
-  setCurrentEvent(`${result.winner.name} wins the battle.`);
-  setIsRunning(false);
-};
 
   const runBattle = () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
 
-    const result = simulateBattle(fighter1, fighter2);
+    const result = simulateBattle(
+      fighter1,
+      fighter2
+    );
 
-    battleResultRef.current = result
+    battleResultRef.current = result;
 
     resetVisuals();
+
     setBattleStarted(true);
     setIsRunning(true);
 
     let eventIndex = 0;
 
     timerRef.current = setInterval(() => {
-      if (eventIndex >= result.events.length) {
+      if (
+        eventIndex >=
+        result.events.length
+      ) {
         if (timerRef.current) {
           clearInterval(timerRef.current);
+          timerRef.current = null;
         }
 
         setHealth1(
           result.fighters.find(
-            (fighter) => fighter.id === fighter1.id
+            (fighter) =>
+              fighter.id === fighter1.id
           )?.health ?? 0
         );
 
         setHealth2(
           result.fighters.find(
-            (fighter) => fighter.id === fighter2.id
+            (fighter) =>
+              fighter.id === fighter2.id
           )?.health ?? 0
         );
 
         setRound(result.rounds);
+
         setWinner(result.winner.name);
-        setCurrentEvent(`${result.winner.name} wins the battle.`);
+
+        setCurrentEvent(
+          `${result.winner.name} wins the battle.`
+        );
+
+        setEventType("elimination");
+
         setIsRunning(false);
 
         return;
       }
 
-      const event = result.events[eventIndex];
+      const event =
+        result.events[eventIndex];
 
       setCurrentEvent(event.message);
+      setEventType(event.type);
 
       setBattleLog((previous) => [
         event.message,
@@ -143,10 +172,19 @@ function BattleContent() {
 
       setRound(event.round);
 
-      if (event.defender === fighter1.name) {
+      /*
+       * Defender 1
+       */
+      if (
+        event.defender ===
+        fighter1.name
+      ) {
         if (event.damage > 0) {
           setHealth1((previous) =>
-            Math.max(0, previous - event.damage)
+            Math.max(
+              0,
+              previous - event.damage
+            )
           );
 
           setDamagePopup1(event.damage);
@@ -159,10 +197,19 @@ function BattleContent() {
         }
       }
 
-      if (event.defender === fighter2.name) {
+      /*
+       * Defender 2
+       */
+      if (
+        event.defender ===
+        fighter2.name
+      ) {
         if (event.damage > 0) {
           setHealth2((previous) =>
-            Math.max(0, previous - event.damage)
+            Math.max(
+              0,
+              previous - event.damage
+            )
           );
 
           setDamagePopup2(event.damage);
@@ -175,13 +222,69 @@ function BattleContent() {
         }
       }
 
+      setTimeout(() => {
+        setEventType(null);
+      }, 600);
+
       eventIndex++;
     }, 700);
   };
 
-  const healthColor = (health: number) => {
-    if (health <= 25) return "bg-red-500";
-    if (health <= 50) return "bg-orange-400";
+  const skipBattle = () => {
+    const result =
+      battleResultRef.current;
+
+    if (!result) return;
+
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    setHealth1(
+      result.fighters.find(
+        (fighter) =>
+          fighter.id === fighter1.id
+      )?.health ?? 0
+    );
+
+    setHealth2(
+      result.fighters.find(
+        (fighter) =>
+          fighter.id === fighter2.id
+      )?.health ?? 0
+    );
+
+    setRound(result.rounds);
+
+    setBattleLog(
+      result.events.map(
+        (event) => event.message
+      )
+    );
+
+    setWinner(result.winner.name);
+
+    setCurrentEvent(
+      `${result.winner.name} wins the battle.`
+    );
+
+    setEventType("elimination");
+
+    setIsRunning(false);
+  };
+
+  const healthColor = (
+    health: number
+  ) => {
+    if (health <= 25) {
+      return "bg-red-500";
+    }
+
+    if (health <= 50) {
+      return "bg-orange-400";
+    }
+
     return "bg-white";
   };
 
@@ -197,7 +300,11 @@ function BattleContent() {
         winner === fighter.name
           ? "border-purple-400/60 shadow-[0_0_60px_rgba(168,85,247,0.15)]"
           : "border-white/10"
-      } ${health <= 0 ? "opacity-60 grayscale" : ""}`}
+      } ${
+        health <= 0
+          ? "opacity-60 grayscale"
+          : ""
+      }`}
     >
       <div
         className={`absolute inset-0 bg-gradient-to-br ${fighter.accent} opacity-50`}
@@ -255,6 +362,7 @@ function BattleContent() {
         </p>
 
         <div className="mt-6 grid grid-cols-2 gap-3 text-center text-xs uppercase tracking-widest">
+
           {[
             ["Power", fighter.power],
             ["Defense", fighter.defense],
@@ -274,10 +382,13 @@ function BattleContent() {
               </span>
             </div>
           ))}
+
         </div>
 
         <div className="mt-8">
+
           <div className="mb-2 flex justify-between text-xs uppercase tracking-widest">
+
             <span className="text-zinc-500">
               Health
             </span>
@@ -285,9 +396,11 @@ function BattleContent() {
             <span className="font-bold">
               {health}%
             </span>
+
           </div>
 
           <div className="h-3 overflow-hidden rounded-full bg-white/10">
+
             <div
               className={`h-full rounded-full transition-all duration-500 ${healthColor(
                 health
@@ -296,7 +409,9 @@ function BattleContent() {
                 width: `${health}%`,
               }}
             />
+
           </div>
+
         </div>
 
         {health <= 0 && (
@@ -310,16 +425,37 @@ function BattleContent() {
             Victory
           </div>
         )}
+
       </div>
     </div>
   );
 
+  const eventStyle = {
+    attack:
+      "border-white/10 bg-white/[0.03] text-zinc-400",
+
+    critical:
+      "border-red-400/40 bg-red-500/10 text-red-300 scale-105",
+
+    dodge:
+      "border-blue-400/40 bg-blue-500/10 text-blue-300",
+
+    ability:
+      "border-purple-400/40 bg-purple-500/10 text-purple-300 scale-105",
+
+    elimination:
+      "border-yellow-400/40 bg-yellow-500/10 text-yellow-300 scale-105",
+  };
+
   return (
     <main className="min-h-screen bg-black px-6 py-12 text-white md:px-10">
+
       <div className="mx-auto max-w-7xl">
 
         {/* Header */}
+
         <div className="mb-12 flex items-center justify-between">
+
           <a
             href="/"
             className="text-sm font-bold uppercase tracking-[0.25em] text-zinc-500 transition hover:text-white"
@@ -330,10 +466,13 @@ function BattleContent() {
           <p className="text-xs uppercase tracking-[0.3em] text-zinc-600">
             Battle Simulation
           </p>
+
         </div>
 
         {/* Title */}
+
         <div className="mb-10 text-center">
+
           <p className="text-xs uppercase tracking-[0.4em] text-purple-400">
             {battleStarted
               ? `Round ${round}`
@@ -341,6 +480,7 @@ function BattleContent() {
           </p>
 
           <h1 className="mt-4 text-5xl font-black uppercase tracking-[-0.05em] md:text-8xl">
+
             {fighter1.name}
 
             <span className="mx-4 text-zinc-800">
@@ -348,13 +488,23 @@ function BattleContent() {
             </span>
 
             {fighter2.name}
+
           </h1>
+
         </div>
 
         {/* Live event */}
+
         <div className="mx-auto mb-10 min-h-12 max-w-3xl text-center">
+
           {currentEvent ? (
-            <div className="rounded-full border border-white/10 bg-white/[0.03] px-6 py-3 text-sm text-zinc-400">
+            <div
+              className={`rounded-full border px-6 py-3 text-sm transition-all duration-300 ${
+                eventType
+                  ? eventStyle[eventType]
+                  : eventStyle.attack
+              }`}
+            >
               {currentEvent}
             </div>
           ) : (
@@ -362,9 +512,11 @@ function BattleContent() {
               Select your fighters and begin the simulation
             </p>
           )}
+
         </div>
 
         {/* Fighters */}
+
         <div className="grid gap-6 md:grid-cols-[1fr_auto_1fr]">
 
           {fighterCard(
@@ -376,7 +528,9 @@ function BattleContent() {
           )}
 
           {/* Center */}
+
           <div className="flex items-center justify-center">
+
             <div className="text-center">
 
               <div
@@ -395,12 +549,18 @@ function BattleContent() {
 
               {isRunning && (
                 <div className="mx-auto mt-5 flex gap-1">
+
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-purple-400" />
+
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-purple-400 [animation-delay:150ms]" />
+
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-purple-400 [animation-delay:300ms]" />
+
                 </div>
               )}
+
             </div>
+
           </div>
 
           {fighterCard(
@@ -410,40 +570,50 @@ function BattleContent() {
             flash2,
             2
           )}
+
         </div>
 
         {/* Controls */}
-        <div className="mt-10 flex justify-center">
-        {!isRunning ? (
-  <button
-    onClick={runBattle}
-    className="rounded-full bg-white px-10 py-4 text-sm font-black uppercase tracking-[0.2em] text-black transition hover:scale-105 hover:bg-purple-300"
-  >
-    {winner ? "Fight Again →" : "Start Battle →"}
-  </button>
-) : (
-  <div className="flex items-center gap-3">
-    <div className="rounded-full border border-purple-400/20 bg-purple-400/5 px-8 py-4 text-xs uppercase tracking-[0.3em] text-purple-300">
-      Battle in progress...
-    </div>
 
-    <button
-      onClick={skipBattle}
-      className="rounded-full border border-white/10 px-6 py-4 text-xs font-bold uppercase tracking-[0.2em] text-zinc-400 transition hover:border-white/30 hover:text-white"
-    >
-      Skip →
-    </button>
-  </div>
-)}
+        <div className="mt-10 flex justify-center">
+
+          {!isRunning ? (
+            <button
+              onClick={runBattle}
+              className="rounded-full bg-white px-10 py-4 text-sm font-black uppercase tracking-[0.2em] text-black transition hover:scale-105 hover:bg-purple-300"
+            >
+              {winner
+                ? "Fight Again →"
+                : "Start Battle →"}
+            </button>
+          ) : (
+            <div className="flex items-center gap-3">
+
+              <div className="rounded-full border border-purple-400/20 bg-purple-400/5 px-8 py-4 text-xs uppercase tracking-[0.3em] text-purple-300">
+                Battle in progress...
+              </div>
+
+              <button
+                onClick={skipBattle}
+                className="rounded-full border border-white/10 px-6 py-4 text-xs font-bold uppercase tracking-[0.2em] text-zinc-400 transition hover:border-white/30 hover:text-white"
+              >
+                Skip →
+              </button>
+
+            </div>
+          )}
+
         </div>
 
         {/* Winner */}
+
         {winner && (
           <div className="relative mt-12 overflow-hidden rounded-[2rem] border border-purple-400/20 bg-purple-500/[0.05] p-10 text-center">
 
             <div className="pointer-events-none absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-purple-500/10 blur-3xl" />
 
             <div className="relative">
+
               <p className="text-xs font-bold uppercase tracking-[0.5em] text-purple-400">
                 Winner
               </p>
@@ -455,14 +625,18 @@ function BattleContent() {
               <p className="mt-4 text-sm text-zinc-500">
                 Victory achieved after {round} rounds.
               </p>
+
             </div>
+
           </div>
         )}
 
-        {/* Battle log */}
+        {/* Battle Log */}
+
         <div className="mt-12 rounded-[2rem] border border-white/10 bg-zinc-950 p-8">
 
           <div className="mb-6 flex items-center justify-between">
+
             <h3 className="text-sm font-bold uppercase tracking-[0.3em]">
               Battle Log
             </h3>
@@ -470,35 +644,44 @@ function BattleContent() {
             <span className="text-xs text-zinc-600">
               {battleLog.length} events
             </span>
+
           </div>
 
           <div className="max-h-72 space-y-2 overflow-y-auto">
+
             {battleLog.length === 0 ? (
               <p className="text-sm text-zinc-700">
                 Waiting for battle to begin...
               </p>
             ) : (
-              battleLog.map((event, index) => (
-                <div
-                  key={`${event}-${index}`}
-                  className={`rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 text-sm ${
-                    index === 0
-                      ? "text-white"
-                      : "text-zinc-600"
-                  }`}
-                >
-                  <span className="mr-3 text-[10px] font-bold uppercase tracking-widest text-zinc-700">
-                    #{battleLog.length - index}
-                  </span>
+              battleLog.map(
+                (event, index) => (
+                  <div
+                    key={`${event}-${index}`}
+                    className={`rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 text-sm ${
+                      index === 0
+                        ? "text-white"
+                        : "text-zinc-600"
+                    }`}
+                  >
 
-                  {event}
-                </div>
-              ))
+                    <span className="mr-3 text-[10px] font-bold uppercase tracking-widest text-zinc-700">
+                      #{battleLog.length - index}
+                    </span>
+
+                    {event}
+
+                  </div>
+                )
+              )
             )}
+
           </div>
+
         </div>
 
       </div>
+
     </main>
   );
 }
@@ -508,9 +691,11 @@ export default function BattlePage() {
     <Suspense
       fallback={
         <main className="flex min-h-screen items-center justify-center bg-black text-white">
+
           <p className="text-xs uppercase tracking-[0.3em] text-zinc-500">
             Loading Battle...
           </p>
+
         </main>
       }
     >
