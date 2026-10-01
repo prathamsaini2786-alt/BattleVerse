@@ -1,8 +1,10 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { characters } from "@/data/characters";
+import { simulateBattle } from "@/lib/battleEngine";
+
 function BattleContent() {
   const searchParams = useSearchParams();
 
@@ -23,80 +25,69 @@ function BattleContent() {
   const [battleLog, setBattleLog] = useState<string[]>([]);
   const [winner, setWinner] = useState<string | null>(null);
   const [battleStarted, setBattleStarted] = useState(false);
-
-  const imagePath = (image: string) =>
-    image.startsWith("/") ? image : `/characters/${image}`;
+  const [isRunning, setIsRunning] = useState(false);
 
   const runBattle = () => {
+    const result = simulateBattle(
+      fighter1,
+      fighter2
+    );
+
     setHealth1(100);
     setHealth2(100);
     setRound(0);
     setBattleLog([]);
     setWinner(null);
     setBattleStarted(true);
-  };
+    setIsRunning(true);
 
-  useEffect(() => {
-    if (!battleStarted || winner) return;
+    let eventIndex = 0;
 
-    if (health1 <= 0 || health2 <= 0) {
-      if (health1 <= 0 && health2 <= 0) {
-        setWinner("DRAW");
-      } else if (health1 <= 0) {
-        setWinner(fighter2.name);
-      } else {
-        setWinner(fighter1.name);
-      }
+    const timer = setInterval(() => {
+      if (eventIndex >= result.events.length) {
+        clearInterval(timer);
 
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      const attackerIsOne = Math.random() > 0.5;
-
-      const baseDamage = attackerIsOne
-        ? fighter1.power / 8
-        : fighter2.power / 8;
-
-      const randomFactor = 0.65 + Math.random() * 0.7;
-
-      const damage = Math.max(
-        5,
-        Math.round(baseDamage * randomFactor)
-      );
-
-      if (attackerIsOne) {
-        setHealth2((previous) =>
-          Math.max(0, previous - damage)
+        setHealth1(
+          result.fighters.find(
+            (fighter) => fighter.id === fighter1.id
+          )?.health ?? 0
         );
 
-        setBattleLog((previous) => [
-          `${fighter1.name} attacks ${fighter2.name} for ${damage} damage.`,
-          ...previous,
-        ]);
-      } else {
+        setHealth2(
+          result.fighters.find(
+            (fighter) => fighter.id === fighter2.id
+          )?.health ?? 0
+        );
+
+        setRound(result.rounds);
+        setWinner(result.winner.name);
+        setIsRunning(false);
+
+        return;
+      }
+
+      const event = result.events[eventIndex];
+
+      setBattleLog((previous) => [
+        event.message,
+        ...previous,
+      ]);
+
+      setRound(event.round);
+
+      if (event.defender === fighter1.name) {
         setHealth1((previous) =>
-          Math.max(0, previous - damage)
+          Math.max(0, previous - event.damage)
         );
-
-        setBattleLog((previous) => [
-          `${fighter2.name} attacks ${fighter1.name} for ${damage} damage.`,
-          ...previous,
-        ]);
+      } else if (event.defender === fighter2.name) {
+        setHealth2((previous) =>
+          Math.max(0, previous - event.damage)
+        );
       }
 
-      setRound((previous) => previous + 1);
-    }, 900);
-
-    return () => clearTimeout(timer);
-  }, [
-    battleStarted,
-    winner,
-    health1,
-    health2,
-    fighter1,
-    fighter2,
-  ]);
+      eventIndex++;
+    }, 700);
+  };
 
   return (
     <main className="min-h-screen bg-black px-6 py-12 text-white md:px-10">
@@ -152,7 +143,7 @@ function BattleContent() {
 
               <div className="mx-auto mb-8 h-64 w-64 overflow-hidden rounded-full border border-white/10 bg-black">
                 <img
-                  src={imagePath(fighter1.image)}
+                  src={fighter1.image}
                   alt={fighter1.name}
                   className="h-full w-full object-cover"
                 />
@@ -163,20 +154,64 @@ function BattleContent() {
               </h2>
 
               <p className="mt-2 text-center text-sm text-zinc-500">
-                POWER {fighter1.power}
+                {fighter1.ability}
               </p>
+
+              {/* Stats */}
+              <div className="mt-6 grid grid-cols-2 gap-3 text-center text-xs uppercase tracking-widest">
+                <div className="rounded-xl bg-white/5 p-3">
+                  <span className="block text-zinc-600">
+                    Power
+                  </span>
+                  <span className="font-bold">
+                    {fighter1.power}
+                  </span>
+                </div>
+
+                <div className="rounded-xl bg-white/5 p-3">
+                  <span className="block text-zinc-600">
+                    Defense
+                  </span>
+                  <span className="font-bold">
+                    {fighter1.defense}
+                  </span>
+                </div>
+
+                <div className="rounded-xl bg-white/5 p-3">
+                  <span className="block text-zinc-600">
+                    Speed
+                  </span>
+                  <span className="font-bold">
+                    {fighter1.speed}
+                  </span>
+                </div>
+
+                <div className="rounded-xl bg-white/5 p-3">
+                  <span className="block text-zinc-600">
+                    Durability
+                  </span>
+                  <span className="font-bold">
+                    {fighter1.durability}
+                  </span>
+                </div>
+              </div>
 
               {/* Health */}
               <div className="mt-8">
                 <div className="mb-2 flex justify-between text-xs uppercase tracking-widest">
-                  <span className="text-zinc-500">Health</span>
+                  <span className="text-zinc-500">
+                    Health
+                  </span>
+
                   <span>{health1}%</span>
                 </div>
 
                 <div className="h-3 overflow-hidden rounded-full bg-white/10">
                   <div
                     className="h-full rounded-full bg-white transition-all duration-500"
-                    style={{ width: `${health1}%` }}
+                    style={{
+                      width: `${health1}%`,
+                    }}
                   />
                 </div>
               </div>
@@ -217,7 +252,7 @@ function BattleContent() {
 
               <div className="mx-auto mb-8 h-64 w-64 overflow-hidden rounded-full border border-white/10 bg-black">
                 <img
-                  src={imagePath(fighter2.image)}
+                  src={fighter2.image}
                   alt={fighter2.name}
                   className="h-full w-full object-cover"
                 />
@@ -228,20 +263,64 @@ function BattleContent() {
               </h2>
 
               <p className="mt-2 text-center text-sm text-zinc-500">
-                POWER {fighter2.power}
+                {fighter2.ability}
               </p>
+
+              {/* Stats */}
+              <div className="mt-6 grid grid-cols-2 gap-3 text-center text-xs uppercase tracking-widest">
+                <div className="rounded-xl bg-white/5 p-3">
+                  <span className="block text-zinc-600">
+                    Power
+                  </span>
+                  <span className="font-bold">
+                    {fighter2.power}
+                  </span>
+                </div>
+
+                <div className="rounded-xl bg-white/5 p-3">
+                  <span className="block text-zinc-600">
+                    Defense
+                  </span>
+                  <span className="font-bold">
+                    {fighter2.defense}
+                  </span>
+                </div>
+
+                <div className="rounded-xl bg-white/5 p-3">
+                  <span className="block text-zinc-600">
+                    Speed
+                  </span>
+                  <span className="font-bold">
+                    {fighter2.speed}
+                  </span>
+                </div>
+
+                <div className="rounded-xl bg-white/5 p-3">
+                  <span className="block text-zinc-600">
+                    Durability
+                  </span>
+                  <span className="font-bold">
+                    {fighter2.durability}
+                  </span>
+                </div>
+              </div>
 
               {/* Health */}
               <div className="mt-8">
                 <div className="mb-2 flex justify-between text-xs uppercase tracking-widest">
-                  <span className="text-zinc-500">Health</span>
+                  <span className="text-zinc-500">
+                    Health
+                  </span>
+
                   <span>{health2}%</span>
                 </div>
 
                 <div className="h-3 overflow-hidden rounded-full bg-white/10">
                   <div
                     className="h-full rounded-full bg-white transition-all duration-500"
-                    style={{ width: `${health2}%` }}
+                    style={{
+                      width: `${health2}%`,
+                    }}
                   />
                 </div>
               </div>
@@ -261,7 +340,9 @@ function BattleContent() {
             </button>
           ) : (
             <div className="rounded-full border border-white/10 px-8 py-4 text-xs uppercase tracking-[0.3em] text-zinc-500">
-              Battle in progress...
+              {isRunning
+                ? "Battle in progress..."
+                : "Battle complete"}
             </div>
           )}
         </div>
@@ -317,6 +398,7 @@ function BattleContent() {
     </main>
   );
 }
+
 export default function BattlePage() {
   return (
     <Suspense
