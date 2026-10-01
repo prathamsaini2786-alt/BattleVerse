@@ -19,11 +19,20 @@ export type BattleEvent = {
     | "elimination";
 };
 
+export type BattleStats = {
+  totalAttacks: number;
+  criticalHits: number;
+  dodges: number;
+  abilitiesUsed: number;
+  totalDamage: Record<string, number>;
+};
+
 export type BattleResult = {
   winner: BattleFighter;
   fighters: BattleFighter[];
   events: BattleEvent[];
   rounds: number;
+  stats: BattleStats;
 };
 
 function calculateDamage(
@@ -89,59 +98,60 @@ function applyAbility(
 ) {
   let finalDamage = damage;
   let message = "";
+  let activated = false;
 
   switch (attacker.id) {
     case "goku":
       if (Math.random() < 0.12) {
         finalDamage = Math.round(damage * 1.35);
+        activated = true;
 
-        message =
-          `${attacker.name} activates Ultra Instinct and unleashes a devastating attack.`;
+        message = `${attacker.name} activates Ultra Instinct and unleashes a devastating attack.`;
       }
       break;
 
     case "gojo":
       if (Math.random() < 0.15) {
         finalDamage = Math.round(damage * 1.25);
+        activated = true;
 
-        message =
-          `${attacker.name} uses Infinity and overwhelms ${defender.name}.`;
+        message = `${attacker.name} uses Infinity and overwhelms ${defender.name}.`;
       }
       break;
 
     case "luffy":
       if (Math.random() < 0.15) {
         finalDamage = Math.round(damage * 1.3);
+        activated = true;
 
-        message =
-          `${attacker.name} activates Gear 5 and dramatically increases the attack.`;
+        message = `${attacker.name} activates Gear 5 and dramatically increases the attack.`;
       }
       break;
 
     case "naruto":
       if (Math.random() < 0.14) {
         finalDamage = Math.round(damage * 1.3);
+        activated = true;
 
-        message =
-          `${attacker.name} enters Six Paths Sage Mode and powers up the attack.`;
+        message = `${attacker.name} enters Six Paths Sage Mode and powers up the attack.`;
       }
       break;
 
     case "batman":
       if (Math.random() < 0.12) {
         finalDamage = Math.round(damage * 1.2);
+        activated = true;
 
-        message =
-          `${attacker.name} exploits a weakness using Preparation.`;
+        message = `${attacker.name} exploits a weakness using Preparation.`;
       }
       break;
 
     case "spiderman":
       if (Math.random() < 0.18) {
         finalDamage = Math.round(damage * 1.2);
+        activated = true;
 
-        message =
-          `${attacker.name}'s Spider-Sense predicts the opening and enables a counterattack.`;
+        message = `${attacker.name}'s Spider-Sense predicts the opening and enables a counterattack.`;
       }
       break;
   }
@@ -149,6 +159,7 @@ function applyAbility(
   return {
     damage: finalDamage,
     message,
+    activated,
   };
 }
 
@@ -174,6 +185,17 @@ export function simulateBattle(
   ];
 
   const events: BattleEvent[] = [];
+
+  const stats: BattleStats = {
+    totalAttacks: 0,
+    criticalHits: 0,
+    dodges: 0,
+    abilitiesUsed: 0,
+    totalDamage: {
+      [fighterOne.id]: 0,
+      [fighterTwo.id]: 0,
+    },
+  };
 
   let round = 0;
 
@@ -207,6 +229,8 @@ export function simulateBattle(
 
       if (!defender.alive) break;
 
+      stats.totalAttacks++;
+
       /*
        * Dodge
        */
@@ -215,15 +239,17 @@ export function simulateBattle(
         calculateDodgeChance(defender);
 
       if (dodges) {
-        events.push({
-          round,
-          attacker: attacker.name,
-          defender: defender.name,
-          damage: 0,
-          message:
-            `${defender.name} dodges ${attacker.name}'s attack using incredible speed.`,
-          type: "dodge",
-        });
+        stats.dodges++;
+
+   events.push({
+  round,
+  attacker: attacker.name,
+  defender: defender.name,
+  damage: 0,
+  type: "dodge",
+  message:
+    `${defender.name} dodges ${attacker.name}'s attack using incredible speed.`,
+});
 
         continue;
       }
@@ -241,7 +267,11 @@ export function simulateBattle(
         calculateCritChance(attacker);
 
       if (isCritical) {
-        damage = Math.round(damage * 1.5);
+        stats.criticalHits++;
+
+        damage = Math.round(
+          damage * 1.5
+        );
       }
 
       /*
@@ -255,53 +285,61 @@ export function simulateBattle(
 
       damage = abilityResult.damage;
 
+      if (abilityResult.activated) {
+        stats.abilitiesUsed++;
+      }
+
+      /*
+       * Apply damage
+       */
       defender.health = Math.max(
         0,
         defender.health - damage
       );
 
+      stats.totalDamage[attacker.id] += damage;
+
       if (defender.health === 0) {
         defender.alive = false;
       }
 
+      /*
+       * Battle message
+       */
       let message: string;
-
-      let type:
-        | "attack"
-        | "critical"
-        | "ability"
-        | "elimination";
 
       if (!defender.alive) {
         message =
           `${attacker.name} eliminates ${defender.name} with ${damage} damage.`;
-
-        type = "elimination";
       } else if (abilityResult.message) {
         message =
           `${abilityResult.message} ${damage} damage dealt.`;
-
-        type = "ability";
       } else if (isCritical) {
         message =
           `${attacker.name} lands a CRITICAL HIT on ${defender.name} for ${damage} damage.`;
-
-        type = "critical";
       } else {
         message =
           `${attacker.name} attacks ${defender.name} for ${damage} damage.`;
-
-        type = "attack";
       }
 
-      events.push({
-        round,
-        attacker: attacker.name,
-        defender: defender.name,
-        damage,
-        message,
-        type,
-      });
+      let eventType: BattleEvent["type"] = "attack";
+
+if (!defender.alive) {
+  eventType = "elimination";
+} else if (abilityResult.activated) {
+  eventType = "ability";
+} else if (isCritical) {
+  eventType = "critical";
+}
+
+events.push({
+  round,
+  attacker: attacker.name,
+  defender: defender.name,
+  damage,
+  message,
+  type: eventType,
+});
 
       if (!defender.alive) break;
     }
@@ -317,5 +355,6 @@ export function simulateBattle(
     fighters,
     events,
     rounds: round,
+    stats,
   };
 }
