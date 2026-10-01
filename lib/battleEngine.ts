@@ -24,33 +24,40 @@ function calculateDamage(
   attacker: BattleFighter,
   defender: BattleFighter
 ) {
-  const attackPower = attacker.power;
+  const powerDamage = attacker.power * 0.9;
 
-  const defenseReduction = defender.defense * 0.35;
+  const defenseReduction = defender.defense * 0.45;
 
   const durabilityReduction =
-    defender.durability * 0.15;
-
-  const baseDamage =
-    attackPower -
-    defenseReduction -
-    durabilityReduction;
+    defender.durability * 0.2;
 
   const variation =
-    Math.random() * 12 - 6;
+    Math.random() * 16 - 8;
 
-  return Math.max(
-    4,
-    Math.round(baseDamage + variation)
-  );
+  const damage =
+    powerDamage -
+    defenseReduction -
+    durabilityReduction +
+    variation;
+
+  return Math.max(5, Math.round(damage));
 }
 
 function calculateCritChance(
   attacker: BattleFighter
 ) {
   return Math.min(
-    0.35,
-    attacker.speed / 400
+    0.3,
+    0.08 + attacker.speed / 500
+  );
+}
+
+function calculateDodgeChance(
+  defender: BattleFighter
+) {
+  return Math.min(
+    0.22,
+    defender.speed / 600
   );
 }
 
@@ -59,14 +66,78 @@ function calculateAttackOrder(
   fighterTwo: BattleFighter
 ) {
   const speedOne =
-    fighterOne.speed + Math.random() * 20;
+    fighterOne.speed + Math.random() * 25;
 
   const speedTwo =
-    fighterTwo.speed + Math.random() * 20;
+    fighterTwo.speed + Math.random() * 25;
 
   return speedOne >= speedTwo
     ? [fighterOne, fighterTwo]
     : [fighterTwo, fighterOne];
+}
+
+function applyAbility(
+  attacker: BattleFighter,
+  defender: BattleFighter,
+  damage: number
+) {
+  let finalDamage = damage;
+  let message = "";
+
+  switch (attacker.id) {
+    case "goku":
+      if (Math.random() < 0.12) {
+        finalDamage = Math.round(damage * 1.35);
+
+        message = `${attacker.name} activates Ultra Instinct and unleashes a devastating attack.`;
+      }
+      break;
+
+    case "gojo":
+      if (Math.random() < 0.15) {
+        finalDamage = Math.round(damage * 1.25);
+
+        message = `${attacker.name} uses Infinity and overwhelms ${defender.name}.`;
+      }
+      break;
+
+    case "luffy":
+      if (Math.random() < 0.15) {
+        finalDamage = Math.round(damage * 1.3);
+
+        message = `${attacker.name} activates Gear 5 and dramatically increases the attack.`;
+      }
+      break;
+
+    case "naruto":
+      if (Math.random() < 0.14) {
+        finalDamage = Math.round(damage * 1.3);
+
+        message = `${attacker.name} enters Six Paths Sage Mode and powers up the attack.`;
+      }
+      break;
+
+    case "batman":
+      if (Math.random() < 0.12) {
+        finalDamage = Math.round(damage * 1.2);
+
+        message = `${attacker.name} exploits a weakness using Preparation.`;
+      }
+      break;
+
+    case "spiderman":
+      if (Math.random() < 0.18) {
+        finalDamage = Math.round(damage * 1.2);
+
+        message = `${attacker.name}'s Spider-Sense predicts the opening and enables a counterattack.`;
+      }
+      break;
+  }
+
+  return {
+    damage: finalDamage,
+    message,
+  };
 }
 
 export function simulateBattle(
@@ -124,11 +195,34 @@ export function simulateBattle(
 
       if (!defender.alive) break;
 
+      /*
+       * Faster fighters have a chance to evade incoming attacks.
+       */
+      const dodges =
+        Math.random() <
+        calculateDodgeChance(defender);
+
+      if (dodges) {
+        events.push({
+          round,
+          attacker: attacker.name,
+          defender: defender.name,
+          damage: 0,
+          message:
+            `${defender.name} dodges ${attacker.name}'s attack using incredible speed.`,
+        });
+
+        continue;
+      }
+
       let damage = calculateDamage(
         attacker,
         defender
       );
 
+      /*
+       * Critical hit.
+       */
       const isCritical =
         Math.random() <
         calculateCritChance(attacker);
@@ -136,6 +230,17 @@ export function simulateBattle(
       if (isCritical) {
         damage = Math.round(damage * 1.5);
       }
+
+      /*
+       * Character-specific ability.
+       */
+      const abilityResult = applyAbility(
+        attacker,
+        defender,
+        damage
+      );
+
+      damage = abilityResult.damage;
 
       defender.health = Math.max(
         0,
@@ -146,25 +251,38 @@ export function simulateBattle(
         defender.alive = false;
       }
 
+      let message: string;
+
+      if (!defender.alive) {
+        message =
+          `${attacker.name} eliminates ${defender.name} with ${damage} damage.`;
+      } else if (abilityResult.message) {
+        message =
+          `${abilityResult.message} ${damage} damage dealt.`;
+      } else if (isCritical) {
+        message =
+          `${attacker.name} lands a CRITICAL HIT on ${defender.name} for ${damage} damage.`;
+      } else {
+        message =
+          `${attacker.name} attacks ${defender.name} for ${damage} damage.`;
+      }
+
       events.push({
         round,
         attacker: attacker.name,
         defender: defender.name,
         damage,
-        message: defender.alive
-          ? isCritical
-            ? `${attacker.name} lands a CRITICAL HIT on ${defender.name} for ${damage} damage.`
-            : `${attacker.name} attacks ${defender.name} for ${damage} damage.`
-          : `${attacker.name} eliminates ${defender.name} with ${damage} damage.`,
+        message,
       });
 
       if (!defender.alive) break;
     }
   }
 
-  const winner = fighterOne.alive
-    ? fighterOne
-    : fighterTwo;
+  const winner =
+    fighterOne.alive
+      ? fighterOne
+      : fighterTwo;
 
   return {
     winner,
