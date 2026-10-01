@@ -31,6 +31,8 @@ function BattleContent() {
   const [damagePopup2, setDamagePopup2] = useState<number | null>(null);
   const [flash1, setFlash1] = useState(false);
   const [flash2, setFlash2] = useState(false);
+  const [isSkipped, setIsSkipped] = useState(false);
+  const battleResultRef = useRef<ReturnType<typeof simulateBattle> | null>(null);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -53,7 +55,41 @@ function BattleContent() {
     setDamagePopup2(null);
     setFlash1(false);
     setFlash2(false);
+    setIsSkipped(false);
   };
+
+  const skipBattle = () => {
+  const result = battleResultRef.current;
+
+  if (!result) return;
+
+  if (timerRef.current) {
+    clearInterval(timerRef.current);
+    timerRef.current = null;
+  }
+
+  setHealth1(
+    result.fighters.find(
+      (fighter) => fighter.id === fighter1.id
+    )?.health ?? 0
+  );
+
+  setHealth2(
+    result.fighters.find(
+      (fighter) => fighter.id === fighter2.id
+    )?.health ?? 0
+  );
+
+  setRound(result.rounds);
+
+  setBattleLog(
+    result.events.map((event) => event.message)
+  );
+
+  setWinner(result.winner.name);
+  setCurrentEvent(`${result.winner.name} wins the battle.`);
+  setIsRunning(false);
+};
 
   const runBattle = () => {
     if (timerRef.current) {
@@ -61,6 +97,8 @@ function BattleContent() {
     }
 
     const result = simulateBattle(fighter1, fighter2);
+
+    battleResultRef.current = result
 
     resetVisuals();
     setBattleStarted(true);
@@ -376,20 +414,27 @@ function BattleContent() {
 
         {/* Controls */}
         <div className="mt-10 flex justify-center">
-          {!isRunning ? (
-            <button
-              onClick={runBattle}
-              className="rounded-full bg-white px-10 py-4 text-sm font-black uppercase tracking-[0.2em] text-black transition hover:scale-105 hover:bg-purple-300"
-            >
-              {winner
-                ? "Fight Again →"
-                : "Start Battle →"}
-            </button>
-          ) : (
-            <div className="rounded-full border border-purple-400/20 bg-purple-400/5 px-8 py-4 text-xs uppercase tracking-[0.3em] text-purple-300">
-              Battle in progress...
-            </div>
-          )}
+        {!isRunning ? (
+  <button
+    onClick={runBattle}
+    className="rounded-full bg-white px-10 py-4 text-sm font-black uppercase tracking-[0.2em] text-black transition hover:scale-105 hover:bg-purple-300"
+  >
+    {winner ? "Fight Again →" : "Start Battle →"}
+  </button>
+) : (
+  <div className="flex items-center gap-3">
+    <div className="rounded-full border border-purple-400/20 bg-purple-400/5 px-8 py-4 text-xs uppercase tracking-[0.3em] text-purple-300">
+      Battle in progress...
+    </div>
+
+    <button
+      onClick={skipBattle}
+      className="rounded-full border border-white/10 px-6 py-4 text-xs font-bold uppercase tracking-[0.2em] text-zinc-400 transition hover:border-white/30 hover:text-white"
+    >
+      Skip →
+    </button>
+  </div>
+)}
         </div>
 
         {/* Winner */}
