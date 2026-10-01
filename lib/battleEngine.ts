@@ -24,65 +24,49 @@ function calculateDamage(
   attacker: BattleFighter,
   defender: BattleFighter
 ) {
-  // Power determines the attack's base strength.
-  const baseDamage = attacker.power * 0.12;
+  const attackPower = attacker.power;
 
-  // Defense reduces incoming damage.
-  const defenseMultiplier =
-    1 - defender.defense / 250;
+  const defenseReduction = defender.defense * 0.35;
 
-  // Small randomness keeps battles unpredictable.
+  const durabilityReduction =
+    defender.durability * 0.15;
+
+  const baseDamage =
+    attackPower -
+    defenseReduction -
+    durabilityReduction;
+
   const variation =
-    0.8 + Math.random() * 0.4;
+    Math.random() * 12 - 6;
 
-  let damage =
-    baseDamage *
-    defenseMultiplier *
-    variation;
-
-  // Character-specific abilities.
-  if (attacker.ability === "Ultra Instinct") {
-    damage *= 1.08;
-  }
-
-  if (attacker.ability === "Gear Fifth") {
-    damage *= 1.05;
-  }
-
-  if (attacker.ability === "Six Paths Mode") {
-    damage *= 1.06;
-  }
-
-  if (attacker.ability === "Infinity") {
-    damage *= 1.04;
-  }
-
-  if (attacker.ability === "Preparation") {
-    damage *= 1.03;
-  }
-
-  if (attacker.ability === "Spider-Sense") {
-    damage *= 1.02;
-  }
-
-  return Math.max(4, Math.round(damage));
+  return Math.max(
+    4,
+    Math.round(baseDamage + variation)
+  );
 }
 
-function determineFirstAttacker(
+function calculateCritChance(
+  attacker: BattleFighter
+) {
+  return Math.min(
+    0.35,
+    attacker.speed / 400
+  );
+}
+
+function calculateAttackOrder(
   fighterOne: BattleFighter,
   fighterTwo: BattleFighter
 ) {
-  if (fighterOne.speed > fighterTwo.speed) {
-    return fighterOne;
-  }
+  const speedOne =
+    fighterOne.speed + Math.random() * 20;
 
-  if (fighterTwo.speed > fighterOne.speed) {
-    return fighterTwo;
-  }
+  const speedTwo =
+    fighterTwo.speed + Math.random() * 20;
 
-  return Math.random() < 0.5
-    ? fighterOne
-    : fighterTwo;
+  return speedOne >= speedTwo
+    ? [fighterOne, fighterTwo]
+    : [fighterTwo, fighterOne];
 }
 
 export function simulateBattle(
@@ -110,17 +94,6 @@ export function simulateBattle(
 
   let round = 0;
 
-  let attacker =
-    determineFirstAttacker(
-      fighterOne,
-      fighterTwo
-    );
-
-  let defender =
-    attacker.id === fighterOne.id
-      ? fighterTwo
-      : fighterOne;
-
   while (
     fighterOne.alive &&
     fighterTwo.alive &&
@@ -128,39 +101,65 @@ export function simulateBattle(
   ) {
     round++;
 
-    const damage = calculateDamage(
-      attacker,
-      defender
+    const [
+      firstAttacker,
+      secondAttacker,
+    ] = calculateAttackOrder(
+      fighterOne,
+      fighterTwo
     );
 
-    defender.health = Math.max(
-      0,
-      defender.health - damage
-    );
+    const attackers = [
+      firstAttacker,
+      secondAttacker,
+    ];
 
-    if (defender.health === 0) {
-      defender.alive = false;
+    for (const attacker of attackers) {
+      if (!attacker.alive) continue;
+
+      const defender =
+        attacker.id === fighterOne.id
+          ? fighterTwo
+          : fighterOne;
+
+      if (!defender.alive) break;
+
+      let damage = calculateDamage(
+        attacker,
+        defender
+      );
+
+      const isCritical =
+        Math.random() <
+        calculateCritChance(attacker);
+
+      if (isCritical) {
+        damage = Math.round(damage * 1.5);
+      }
+
+      defender.health = Math.max(
+        0,
+        defender.health - damage
+      );
+
+      if (defender.health === 0) {
+        defender.alive = false;
+      }
+
+      events.push({
+        round,
+        attacker: attacker.name,
+        defender: defender.name,
+        damage,
+        message: defender.alive
+          ? isCritical
+            ? `${attacker.name} lands a CRITICAL HIT on ${defender.name} for ${damage} damage.`
+            : `${attacker.name} attacks ${defender.name} for ${damage} damage.`
+          : `${attacker.name} eliminates ${defender.name} with ${damage} damage.`,
+      });
+
+      if (!defender.alive) break;
     }
-
-    events.push({
-      round,
-      attacker: attacker.name,
-      defender: defender.name,
-      damage,
-      message:
-        defender.health === 0
-          ? `${attacker.name} eliminates ${defender.name}.`
-          : `${attacker.name} attacks ${defender.name} for ${damage} damage.`,
-    });
-
-    if (!defender.alive) {
-      break;
-    }
-
-    const previousAttacker = attacker;
-
-    attacker = defender;
-    defender = previousAttacker;
   }
 
   const winner = fighterOne.alive
