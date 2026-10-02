@@ -50,6 +50,7 @@ export default function HomePage() {
         <div className="pointer-events-none absolute left-1/2 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-purple-600/10 blur-3xl" />
 
         <div className="relative mx-auto max-w-7xl">
+          {/* Header */}
           <div className="mb-16 flex items-center justify-between">
             <p className="text-sm font-black uppercase tracking-[0.3em]">
               BattleVerse
@@ -60,6 +61,7 @@ export default function HomePage() {
             </p>
           </div>
 
+          {/* Hero copy */}
           <div className="max-w-5xl">
             <p className="mb-6 text-xs font-bold uppercase tracking-[0.4em] text-purple-400">
               Choose your fighters
@@ -159,8 +161,10 @@ export default function HomePage() {
                       : "border-white/10 hover:-translate-y-2 hover:border-white/20"
                   } ${character.accent}`}
                 >
+                  {/* Glow */}
                   <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl transition-transform duration-700 group-hover:scale-150" />
 
+                  {/* Selection badge */}
                   {selected && (
                     <div
                       className={`absolute left-7 top-7 z-20 rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] ${
@@ -173,6 +177,7 @@ export default function HomePage() {
                     </div>
                   )}
 
+                  {/* Top info */}
                   <div className="relative z-10 flex items-center justify-between">
                     <span className="text-xs uppercase tracking-[0.3em] text-white/50">
                       {character.universe}
@@ -183,6 +188,7 @@ export default function HomePage() {
                     </span>
                   </div>
 
+                  {/* Character image */}
                   <div className="relative mx-auto mt-8 h-64 w-64 overflow-hidden rounded-full border border-white/10 bg-black/30 shadow-2xl transition-transform duration-700 group-hover:scale-105">
                     <Image
                       src={character.image}
@@ -193,6 +199,7 @@ export default function HomePage() {
                     />
                   </div>
 
+                  {/* Character info */}
                   <div className="relative z-10 mt-8">
                     <h3 className="text-4xl font-black uppercase tracking-[-0.04em]">
                       {character.name}
@@ -206,6 +213,7 @@ export default function HomePage() {
                       {character.description}
                     </p>
 
+                    {/* Power bar */}
                     <div className="mt-6">
                       <div className="mb-2 flex justify-between text-[10px] uppercase tracking-[0.2em] text-white/40">
                         <span>Power</span>
@@ -223,6 +231,7 @@ export default function HomePage() {
                     </div>
                   </div>
 
+                  {/* Bottom hint */}
                   <div className="absolute bottom-5 right-7 text-[9px] font-bold uppercase tracking-[0.25em] text-white/20 transition-colors group-hover:text-white/50">
                     {selected ? "Click to remove" : "Click to select"}
                   </div>
@@ -242,7 +251,11 @@ export default function HomePage() {
 
           <div className="mt-5 text-3xl font-black uppercase tracking-[-0.04em] md:text-5xl">
             {fighter1?.name ?? "Fighter 1"}
-            <span className="mx-3 text-zinc-700">VS</span>
+
+            <span className="mx-3 text-zinc-700">
+              VS
+            </span>
+
             {fighter2?.name ?? "Fighter 2"}
           </div>
 
