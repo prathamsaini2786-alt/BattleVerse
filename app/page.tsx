@@ -1,274 +1,217 @@
-"use client";
-
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { characters } from "@/data/characters";
-import type { Character } from "@/data/characters";
+import Link from "next/link";
 
 export default function HomePage() {
-  const router = useRouter();
-
-  const [fighter1, setFighter1] = useState<Character | null>(null);
-  const [fighter2, setFighter2] = useState<Character | null>(null);
-
-  const handleSelect = (character: Character) => {
-    // Clicking an already-selected fighter removes them.
-    if (fighter1?.id === character.id) {
-      setFighter1(null);
-      return;
-    }
-
-    if (fighter2?.id === character.id) {
-      setFighter2(null);
-      return;
-    }
-
-    // Fill Fighter 1 first, then Fighter 2.
-    if (!fighter1) {
-      setFighter1(character);
-      return;
-    }
-
-    if (!fighter2) {
-      setFighter2(character);
-    }
-  };
-
-  const startBattle = () => {
-    if (!fighter1 || !fighter2) return;
-
-    router.push(
-      `/battle?fighter1=${fighter1.id}&fighter2=${fighter2.id}`
-    );
-  };
-
   return (
     <main className="min-h-screen bg-black text-white">
-      {/* Hero */}
-      <section className="relative overflow-hidden px-6 pb-20 pt-16 md:px-10 md:pt-24">
-        <div className="pointer-events-none absolute left-1/2 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-purple-600/10 blur-3xl" />
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute left-1/2 top-[-300px] h-[600px] w-[900px] -translate-x-1/2 rounded-full bg-purple-600/10 blur-[140px]" />
 
-        <div className="relative mx-auto max-w-7xl">
-          {/* Header */}
-          <div className="mb-16 flex items-center justify-between">
-            <p className="text-sm font-black uppercase tracking-[0.3em]">
-              BattleVerse
-            </p>
+        <div className="absolute bottom-[-300px] right-[-200px] h-[500px] w-[500px] rounded-full bg-red-600/5 blur-[120px]" />
+      </div>
 
-            <p className="text-xs uppercase tracking-[0.3em] text-zinc-600">
-              Fictional Battle Simulator
-            </p>
+      <div className="relative mx-auto flex min-h-screen max-w-7xl flex-col px-6 py-8 md:px-10">
+
+        {/* NAVBAR */}
+
+        <nav className="flex items-center justify-between">
+          <Link
+            href="/"
+            className="text-lg font-black uppercase tracking-[-0.04em]"
+          >
+            Battle<span className="text-purple-400">Verse</span>
+          </Link>
+
+          <div className="text-[10px] font-bold uppercase tracking-[0.35em] text-zinc-600">
+            Fictional Battle Simulator
           </div>
+        </nav>
 
-          {/* Hero copy */}
+        {/* HERO */}
+
+        <section className="flex flex-1 flex-col justify-center py-20">
+
           <div className="max-w-5xl">
-            <p className="mb-6 text-xs font-bold uppercase tracking-[0.4em] text-purple-400">
-              Choose your fighters
+
+            <p className="mb-6 text-xs font-bold uppercase tracking-[0.5em] text-purple-400">
+              Enter the arena
             </p>
 
-            <h1 className="text-6xl font-black uppercase leading-[0.85] tracking-[-0.06em] md:text-9xl">
+            <h1 className="text-6xl font-black uppercase leading-[0.85] tracking-[-0.07em] md:text-9xl">
               WHO
               <br />
-              WOULD
+              <span className="text-zinc-700">
+                WOULD
+              </span>
               <br />
               WIN?
             </h1>
 
             <p className="mt-8 max-w-xl text-sm leading-7 text-zinc-500 md:text-base">
-              Pick two fictional characters and let the BattleVerse engine
-              decide their fate.
+              Battle your favorite fictional characters in simulated
+              fights powered by stats, abilities, critical hits,
+              dodges and unpredictable combat.
             </p>
-          </div>
-        </div>
-      </section>
 
-      {/* Selection status */}
-      <section className="border-y border-white/10 bg-zinc-950/60 px-6 py-6 md:px-10">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-wrap gap-3">
-            <div
-              className={`rounded-full border px-5 py-2 text-xs font-bold uppercase tracking-[0.2em] ${
-                fighter1
-                  ? "border-purple-400/50 bg-purple-400/10 text-purple-300"
-                  : "border-white/10 text-zinc-600"
-              }`}
-            >
-              Fighter 1: {fighter1?.name ?? "Choose"}
-            </div>
-
-            <div
-              className={`rounded-full border px-5 py-2 text-xs font-bold uppercase tracking-[0.2em] ${
-                fighter2
-                  ? "border-red-400/50 bg-red-400/10 text-red-300"
-                  : "border-white/10 text-zinc-600"
-              }`}
-            >
-              Fighter 2: {fighter2?.name ?? "Choose"}
-            </div>
           </div>
 
-          <p className="text-xs uppercase tracking-[0.25em] text-zinc-600">
-            {fighter1 && fighter2
-              ? "Ready for battle"
-              : "Select two fighters"}
-          </p>
-        </div>
-      </section>
+          {/* MODE SELECTION */}
 
-      {/* Character roster */}
-      <section className="px-6 py-20 md:px-10">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-10 flex items-end justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-zinc-600">
-                Available roster
+          <div className="mt-20">
+
+            <div className="mb-6">
+
+              <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-zinc-600">
+                Choose your mode
               </p>
 
-              <h2 className="mt-3 text-4xl font-black uppercase tracking-[-0.04em] md:text-6xl">
-                Select your fighters
+              <h2 className="mt-2 text-2xl font-black uppercase tracking-[-0.03em]">
+                Enter the Arena
               </h2>
+
             </div>
 
-            <span className="hidden text-xs uppercase tracking-[0.2em] text-zinc-600 md:block">
-              {characters.length} characters
-            </span>
-          </div>
+            <div className="grid gap-5 md:grid-cols-2">
 
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {characters.map((character) => {
-              const selected =
-                fighter1?.id === character.id ||
-                fighter2?.id === character.id;
+              {/* 1V1 */}
 
-              const selectionSlot =
-                fighter1?.id === character.id
-                  ? 1
-                  : fighter2?.id === character.id
-                    ? 2
-                    : null;
+              <Link
+                href="/battle"
+                className="group relative overflow-hidden rounded-[2rem] border border-white/10 bg-zinc-950 p-8 transition-all duration-300 hover:-translate-y-2 hover:border-purple-400/40 md:p-10"
+              >
 
-              return (
-                <button
-                  key={character.id}
-                  type="button"
-                  onClick={() => handleSelect(character)}
-                  className={`group relative min-h-[520px] overflow-hidden rounded-[2rem] border bg-gradient-to-br p-7 text-left transition-all duration-500 ${
-                    selected
-                      ? selectionSlot === 1
-                        ? "border-purple-400/70 ring-2 ring-purple-400/20"
-                        : "border-red-400/70 ring-2 ring-red-400/20"
-                      : "border-white/10 hover:-translate-y-2 hover:border-white/20"
-                  } ${character.accent}`}
-                >
-                  {/* Glow */}
-                  <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl transition-transform duration-700 group-hover:scale-150" />
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 via-purple-500/5 to-transparent opacity-60 transition group-hover:opacity-100" />
 
-                  {/* Selection badge */}
-                  {selected && (
-                    <div
-                      className={`absolute left-7 top-7 z-20 rounded-full px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] ${
-                        selectionSlot === 1
-                          ? "bg-purple-400 text-black"
-                          : "bg-red-400 text-black"
-                      }`}
-                    >
-                      Fighter {selectionSlot}
-                    </div>
-                  )}
+                <div className="relative">
 
-                  {/* Top info */}
-                  <div className="relative z-10 flex items-center justify-between">
-                    <span className="text-xs uppercase tracking-[0.3em] text-white/50">
-                      {character.universe}
+                  <div className="flex items-center justify-between">
+
+                    <span className="text-xs font-black tracking-[0.3em] text-zinc-700">
+                      01
                     </span>
 
-                    <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[10px] font-bold text-white/50">
-                      {character.power}
+                    <span className="text-xs font-bold uppercase tracking-[0.3em] text-zinc-600 transition group-hover:text-purple-300">
+                      Enter →
                     </span>
+
                   </div>
 
-                  {/* Character image */}
-                  <div className="relative mx-auto mt-8 h-64 w-64 overflow-hidden rounded-full border border-white/10 bg-black/30 shadow-2xl transition-transform duration-700 group-hover:scale-105">
-                    <Image
-                      src={character.image}
-                      alt={character.name}
-                      fill
-                      sizes="256px"
-                      className="object-cover"
-                    />
-                  </div>
+                  <div className="mt-20">
 
-                  {/* Character info */}
-                  <div className="relative z-10 mt-8">
-                    <h3 className="text-4xl font-black uppercase tracking-[-0.04em]">
-                      {character.name}
+                    <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-purple-400">
+                      Fighter vs Fighter
+                    </p>
+
+                    <h3 className="mt-3 text-6xl font-black uppercase tracking-[-0.06em]">
+                      1v1
                     </h3>
 
-                    <p className="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-white/40">
-                      {character.ability}
+                    <p className="mt-5 max-w-md text-sm leading-6 text-zinc-500">
+                      Choose two characters and watch them battle
+                      through attacks, abilities, critical hits
+                      and dodges.
                     </p>
 
-                    <p className="mt-4 text-sm leading-6 text-white/40">
-                      {character.description}
+                  </div>
+
+                  <div className="mt-10 h-px bg-white/5" />
+
+                  <div className="mt-5 flex items-center justify-between">
+
+                    <span className="text-[10px] uppercase tracking-[0.3em] text-zinc-700">
+                      Two fighters
+                    </span>
+
+                    <span className="text-xl text-zinc-700 transition group-hover:translate-x-2 group-hover:text-white">
+                      →
+                    </span>
+
+                  </div>
+
+                </div>
+
+              </Link>
+
+              {/* BATTLE ROYALE */}
+
+              <Link
+                href="/battle-royale"
+                className="group relative overflow-hidden rounded-[2rem] border border-white/10 bg-zinc-950 p-8 transition-all duration-300 hover:-translate-y-2 hover:border-red-400/40 md:p-10"
+              >
+
+                <div className="absolute inset-0 bg-gradient-to-br from-red-500/20 via-orange-500/5 to-transparent opacity-60 transition group-hover:opacity-100" />
+
+                <div className="relative">
+
+                  <div className="flex items-center justify-between">
+
+                    <span className="text-xs font-black tracking-[0.3em] text-zinc-700">
+                      02
+                    </span>
+
+                    <span className="text-xs font-bold uppercase tracking-[0.3em] text-zinc-600 transition group-hover:text-red-300">
+                      Enter →
+                    </span>
+
+                  </div>
+
+                  <div className="mt-20">
+
+                    <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-red-400">
+                      Last Fighter Standing
                     </p>
 
-                    {/* Power bar */}
-                    <div className="mt-6">
-                      <div className="mb-2 flex justify-between text-[10px] uppercase tracking-[0.2em] text-white/40">
-                        <span>Power</span>
-                        <span>{character.power}%</span>
-                      </div>
+                    <h3 className="mt-3 text-5xl font-black uppercase tracking-[-0.06em] md:text-6xl">
+                      Battle
+                      <br />
+                      Royale
+                    </h3>
 
-                      <div className="h-1 overflow-hidden rounded-full bg-white/10">
-                        <div
-                          className="h-full rounded-full bg-white transition-all duration-700 group-hover:bg-purple-400"
-                          style={{
-                            width: `${character.power}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
+                    <p className="mt-5 max-w-md text-sm leading-6 text-zinc-500">
+                      Drop multiple fictional characters into one
+                      arena and fight until only one survivor remains.
+                    </p>
+
                   </div>
 
-                  {/* Bottom hint */}
-                  <div className="absolute bottom-5 right-7 text-[9px] font-bold uppercase tracking-[0.25em] text-white/20 transition-colors group-hover:text-white/50">
-                    {selected ? "Click to remove" : "Click to select"}
+                  <div className="mt-10 h-px bg-white/5" />
+
+                  <div className="mt-5 flex items-center justify-between">
+
+                    <span className="text-[10px] uppercase tracking-[0.3em] text-zinc-700">
+                      Multiple fighters
+                    </span>
+
+                    <span className="text-xl text-zinc-700 transition group-hover:translate-x-2 group-hover:text-white">
+                      →
+                    </span>
+
                   </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </section>
 
-      {/* Battle CTA */}
-      <section className="px-6 pb-24 md:px-10">
-        <div className="mx-auto max-w-7xl rounded-[2rem] border border-white/10 bg-zinc-950 p-8 text-center md:p-14">
-          <p className="text-xs uppercase tracking-[0.3em] text-zinc-600">
-            Your matchup
-          </p>
+                </div>
 
-          <div className="mt-5 text-3xl font-black uppercase tracking-[-0.04em] md:text-5xl">
-            {fighter1?.name ?? "Fighter 1"}
+              </Link>
 
-            <span className="mx-3 text-zinc-700">
-              VS
-            </span>
+            </div>
 
-            {fighter2?.name ?? "Fighter 2"}
           </div>
 
-          <button
-            type="button"
-            disabled={!fighter1 || !fighter2}
-            onClick={startBattle}
-            className="mt-8 rounded-full bg-white px-10 py-4 text-xs font-black uppercase tracking-[0.25em] text-black transition-all hover:scale-105 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-600 disabled:hover:scale-100"
-          >
-            Start Battle →
-          </button>
-        </div>
-      </section>
+        </section>
+
+        {/* FOOTER */}
+
+        <footer className="flex items-center justify-between border-t border-white/5 py-6">
+
+          <span className="text-[9px] uppercase tracking-[0.3em] text-zinc-700">
+            BattleVerse © 2026
+          </span>
+
+          <span className="text-[9px] uppercase tracking-[0.3em] text-zinc-700">
+            Fictional characters • Simulated battles
+          </span>
+
+        </footer>
+
+      </div>
     </main>
   );
 }

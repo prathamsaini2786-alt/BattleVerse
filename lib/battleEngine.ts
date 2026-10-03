@@ -42,12 +42,9 @@ function calculateDamage(
   const powerDamage = attacker.power * 0.9;
 
   const defenseReduction = defender.defense * 0.45;
+  const durabilityReduction = defender.durability * 0.2;
 
-  const durabilityReduction =
-    defender.durability * 0.2;
-
-  const variation =
-    Math.random() * 16 - 8;
+  const variation = Math.random() * 16 - 8;
 
   const damage =
     powerDamage -
@@ -58,24 +55,23 @@ function calculateDamage(
   return Math.max(5, Math.round(damage));
 }
 
-function calculateCritChance(
-  attacker: BattleFighter
-) {
+function calculateCritChance(attacker: BattleFighter) {
   return Math.min(
     0.3,
     0.08 + attacker.speed / 500
   );
 }
 
-function calculateDodgeChance(
-  defender: BattleFighter
-) {
+function calculateDodgeChance(defender: BattleFighter) {
   return Math.min(
     0.22,
     defender.speed / 600
   );
 }
 
+/*
+ * Determines who attacks first.
+ */
 function calculateAttackOrder(
   fighterOne: BattleFighter,
   fighterTwo: BattleFighter
@@ -91,6 +87,12 @@ function calculateAttackOrder(
     : [fighterTwo, fighterOne];
 }
 
+/*
+ * Character-specific abilities.
+ *
+ * Offensive abilities modify outgoing damage.
+ * Defensive abilities modify incoming damage.
+ */
 function applyAbility(
   attacker: BattleFighter,
   defender: BattleFighter,
@@ -100,64 +102,113 @@ function applyAbility(
   let message = "";
   let activated = false;
 
-  switch (attacker.id) {
-    case "goku":
-      if (Math.random() < 0.12) {
-        finalDamage = Math.round(damage * 1.35);
-        activated = true;
+  /*
+   * GOKU
+   *
+   * Ultra Instinct:
+   * Occasionally produces a powerful counter-style attack.
+   */
+  if (attacker.id === "goku") {
+    if (Math.random() < 0.12) {
+      finalDamage = Math.round(damage * 1.35);
 
-        message = `${attacker.name} activates Ultra Instinct and unleashes a devastating attack.`;
-      }
-      break;
+      activated = true;
 
-    case "gojo":
-      if (Math.random() < 0.15) {
-        finalDamage = Math.round(damage * 1.25);
-        activated = true;
+      message =
+        `${attacker.name} activates Ultra Instinct and unleashes a devastating attack.`;
+    }
+  }
 
-        message = `${attacker.name} uses Infinity and overwhelms ${defender.name}.`;
-      }
-      break;
+  /*
+   * GOJO
+   *
+   * Infinity:
+   * Occasionally reduces incoming damage dramatically.
+   *
+   * This is handled separately below because it is a
+   * defensive ability.
+   */
+  if (defender.id === "gojo") {
+    if (Math.random() < 0.15) {
+      finalDamage = Math.round(damage * 0.35);
 
-    case "luffy":
-      if (Math.random() < 0.15) {
-        finalDamage = Math.round(damage * 1.3);
-        activated = true;
+      activated = true;
 
-        message = `${attacker.name} activates Gear 5 and dramatically increases the attack.`;
-      }
-      break;
+      message =
+        `${defender.name}'s Infinity neutralizes most of the attack.`;
+    }
+  }
 
-    case "naruto":
-      if (Math.random() < 0.14) {
-        finalDamage = Math.round(damage * 1.3);
-        activated = true;
+  /*
+   * LUFFY
+   *
+   * Gear 5:
+   * Large temporary damage amplification.
+   */
+  if (attacker.id === "luffy") {
+    if (Math.random() < 0.15) {
+      finalDamage = Math.round(damage * 1.3);
 
-        message = `${attacker.name} enters Six Paths Sage Mode and powers up the attack.`;
-      }
-      break;
+      activated = true;
 
-    case "batman":
-      if (Math.random() < 0.12) {
-        finalDamage = Math.round(damage * 1.2);
-        activated = true;
+      message =
+        `${attacker.name} activates Gear 5 and dramatically increases the attack.`;
+    }
+  }
 
-        message = `${attacker.name} exploits a weakness using Preparation.`;
-      }
-      break;
+  /*
+   * NARUTO
+   *
+   * Six Paths Sage Mode:
+   * Strong offensive burst.
+   */
+  if (attacker.id === "naruto") {
+    if (Math.random() < 0.14) {
+      finalDamage = Math.round(damage * 1.3);
 
-    case "spiderman":
-      if (Math.random() < 0.18) {
-        finalDamage = Math.round(damage * 1.2);
-        activated = true;
+      activated = true;
 
-        message = `${attacker.name}'s Spider-Sense predicts the opening and enables a counterattack.`;
-      }
-      break;
+      message =
+        `${attacker.name} enters Six Paths Sage Mode and powers up the attack.`;
+    }
+  }
+
+  /*
+   * BATMAN
+   *
+   * Preparation:
+   * Batman analyzes the opponent and exploits a weakness.
+   */
+  if (attacker.id === "batman") {
+    if (Math.random() < 0.12) {
+      finalDamage = Math.round(damage * 1.2);
+
+      activated = true;
+
+      message =
+        `${attacker.name} exploits ${defender.name}'s weakness using Preparation.`;
+    }
+  }
+
+  /*
+   * SPIDER-MAN
+   *
+   * Spider-Sense:
+   * Offensive counter opportunity.
+   */
+  if (attacker.id === "spiderman") {
+    if (Math.random() < 0.18) {
+      finalDamage = Math.round(damage * 1.2);
+
+      activated = true;
+
+      message =
+        `${attacker.name}'s Spider-Sense predicts the opening and enables a counterattack.`;
+    }
   }
 
   return {
-    damage: finalDamage,
+    damage: Math.max(0, finalDamage),
     message,
     activated,
   };
@@ -191,6 +242,7 @@ export function simulateBattle(
     criticalHits: 0,
     dodges: 0,
     abilitiesUsed: 0,
+
     totalDamage: {
       [fighterOne.id]: 0,
       [fighterTwo.id]: 0,
@@ -232,7 +284,7 @@ export function simulateBattle(
       stats.totalAttacks++;
 
       /*
-       * Dodge
+       * DODGE
        */
       const dodges =
         Math.random() <
@@ -241,26 +293,29 @@ export function simulateBattle(
       if (dodges) {
         stats.dodges++;
 
-   events.push({
-  round,
-  attacker: attacker.name,
-  defender: defender.name,
-  damage: 0,
-  type: "dodge",
-  message:
-    `${defender.name} dodges ${attacker.name}'s attack using incredible speed.`,
-});
+        events.push({
+          round,
+          attacker: attacker.name,
+          defender: defender.name,
+          damage: 0,
+          type: "dodge",
+          message:
+            `${defender.name} dodges ${attacker.name}'s attack using incredible speed.`,
+        });
 
         continue;
       }
 
+      /*
+       * BASE DAMAGE
+       */
       let damage = calculateDamage(
         attacker,
         defender
       );
 
       /*
-       * Critical hit
+       * CRITICAL HIT
        */
       const isCritical =
         Math.random() <
@@ -275,7 +330,7 @@ export function simulateBattle(
       }
 
       /*
-       * Character ability
+       * CHARACTER ABILITY
        */
       const abilityResult = applyAbility(
         attacker,
@@ -290,7 +345,7 @@ export function simulateBattle(
       }
 
       /*
-       * Apply damage
+       * APPLY DAMAGE
        */
       defender.health = Math.max(
         0,
@@ -299,12 +354,15 @@ export function simulateBattle(
 
       stats.totalDamage[attacker.id] += damage;
 
+      /*
+       * ELIMINATION
+       */
       if (defender.health === 0) {
         defender.alive = false;
       }
 
       /*
-       * Battle message
+       * BATTLE MESSAGE
        */
       let message: string;
 
@@ -322,24 +380,28 @@ export function simulateBattle(
           `${attacker.name} attacks ${defender.name} for ${damage} damage.`;
       }
 
-      let eventType: BattleEvent["type"] = "attack";
+      /*
+       * EVENT TYPE
+       */
+      let eventType: BattleEvent["type"] =
+        "attack";
 
-if (!defender.alive) {
-  eventType = "elimination";
-} else if (abilityResult.activated) {
-  eventType = "ability";
-} else if (isCritical) {
-  eventType = "critical";
-}
+      if (!defender.alive) {
+        eventType = "elimination";
+      } else if (abilityResult.activated) {
+        eventType = "ability";
+      } else if (isCritical) {
+        eventType = "critical";
+      }
 
-events.push({
-  round,
-  attacker: attacker.name,
-  defender: defender.name,
-  damage,
-  message,
-  type: eventType,
-});
+      events.push({
+        round,
+        attacker: attacker.name,
+        defender: defender.name,
+        damage,
+        message,
+        type: eventType,
+      });
 
       if (!defender.alive) break;
     }
